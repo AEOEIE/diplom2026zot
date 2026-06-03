@@ -1,0 +1,178 @@
+﻿@inherits LayoutComponentBase
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using NewDiplom.Client.Services
+
+@inject AuthStateProvider AuthProvider
+@inject NavigationManager Navigation
+
+<div class="layout">
+
+    <header class="topbar">
+
+        <div class="logo">
+            Почтовое отделение
+        </div>
+
+        <nav class="nav-links">
+
+            @if (role == "Client")
+            {
+                <NavLink href="/my-shipments" 
+                         class="nav-item">
+                    Мои отправления
+                </NavLink>
+
+                <NavLink href="/create-shipment" 
+                         class="nav-item">
+                    Создать отправление
+                </NavLink>
+                <NavLink href="/profile" 
+                         class="nav-item">
+                    Профиль
+                </NavLink>
+            }
+
+            @if (role == "Operator")
+            {
+                <NavLink href="/shipments" 
+                         class="nav-item">
+                    Отправления
+                </NavLink>
+
+                <NavLink href="/clients" 
+                         class="nav-item">
+                    Клиенты
+                </NavLink>
+
+                <NavLink href="/post-offices" 
+                         class="nav-item">
+                    Отделения
+                </NavLink>
+
+                <NavLink href="/services"
+                         class="nav-item">
+                    Услуги
+                </NavLink>
+
+                <NavLink href="/delivery-methods"
+                         class="nav-item">
+                    Способы доставки
+                </NavLink>
+            }
+
+            @if (role == "ServiceManager")
+            {
+                <NavLink href="/services" 
+                         class="nav-item">
+                    Услуги
+                </NavLink>
+
+                <NavLink href="/delivery-methods" 
+                         class="nav-item">
+                    Способы доставки
+                </NavLink>
+            }
+
+            @if (role == "DepartmentHead")
+            {
+                <NavLink href="/shipments" 
+                         class="nav-item">
+                    Отправления
+                </NavLink>
+                <NavLink href="/services" 
+                         class="nav-item">
+                    Услуги
+                </NavLink>
+                <NavLink href="/delivery-methods" 
+                         class="nav-item">
+                    Способы доставки
+                </NavLink>
+                <NavLink href="/post-offices" 
+                         class="nav-item">
+                    Отделения
+                </NavLink>
+            }
+
+            @if (role == "Admin")
+            {
+                <NavLink href="/users" 
+                         class="nav-item">
+                    Пользователи
+                </NavLink>
+
+                <NavLink href="/shipments" 
+                         class="nav-item">
+                    Отправления
+                </NavLink>
+
+                <NavLink href="/services" 
+                         class="nav-item">
+                    Услуги
+                </NavLink>
+                <NavLink href="/delivery-methods" 
+                         class="nav-item">
+                    Способы доставки
+                </NavLink>
+                <NavLink href="/post-offices" 
+                         class="nav-item">
+                    Отделения
+                </NavLink>
+                <NavLink href="/audit"
+                         class="nav-item">
+                    Отчет
+                </NavLink>
+            }
+
+        </nav> 
+        
+
+        <div class="profile-block">
+
+            <span class="role-badge">
+                @role
+            </span>
+
+            <button class="logout-button"
+                    @onclick="Logout">
+                Выйти
+            </button>
+
+        </div>
+
+    </header>
+
+    <main class="content">
+        @Body
+    </main>
+
+</div>
+
+@code {
+
+    private string? role;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserRole();
+    }
+
+    private async Task LoadUserRole()
+    {
+        var authState =
+            await AuthProvider.GetAuthenticationStateAsync();
+
+        var user = authState.User;
+
+        role = user.FindFirst(ClaimTypes.Role)?.Value;
+    }
+
+    private async Task Logout()
+    {
+        await AuthProvider.MarkUserAsLoggedOut();
+
+        Navigation.NavigateTo("/login", true);
+    }
+
+}

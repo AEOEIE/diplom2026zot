@@ -1,0 +1,136 @@
+﻿@page "/my-shipments"
+
+@using NewDiplom.Client.DTOs.Shipments
+
+@inject HttpClient Http
+
+<div class="page">
+
+    <h2 class="modal-title" style="text-align: left; margin-bottom: 30px;">
+        Мои отправления
+    </h2>
+
+    @if (shipments == null)
+    {
+        <div class="empty-block">
+            Загрузка...
+        </div>
+    }
+    else if (!shipments.Any())
+    {
+        <div class="empty-block">
+            У вас пока нет отправлений
+        </div>
+    }
+    else
+    {
+        <div class="cards-container">
+
+            @foreach (var item in shipments)
+            {
+                <div class="service-card">
+
+                    <div class="service-header">
+
+                        <div class="service-name">
+                            @item.TrackingNumber
+                        </div>
+
+                        <div class="service-price">
+                            @item.TotalPrice.ToString("C")
+                        </div>
+
+                    </div>
+
+                    <div class="service-description">
+
+                        <div class="user-row">
+                            <span class="user-label">Получатель</span>
+                            <span class="user-value">@item.RecipientName</span>
+                        </div>
+
+                        <div class="user-row">
+                            <span class="user-label">Телефон получателя</span>
+                            <span class="user-value">@item.RecipientPhone</span>
+                        </div>
+
+                        <div class="user-row">
+                            <span class="user-label">Откуда</span>
+                            <span class="user-value">@item.CurrentOfficeName</span>
+                        </div>
+
+                        <div class="user-row">
+                            <span class="user-label">Куда</span>
+                            <span class="user-value">@item.DestinationOfficeName</span>
+                        </div>
+
+                        <div class="user-row">
+                            <span class="user-label">Адрес доставки</span>
+                            <span class="user-value">@item.DestinationAddress</span>
+                        </div>
+
+                        <div class="user-row">
+                            <span class="user-label">Тип услуги</span>
+                            <span class="user-value">@item.ServiceType</span>
+                        </div>
+
+                        <div class="user-row">
+                            <span class="user-label">Способ доставки</span>
+                            <span class="user-value">@item.DeliveryMethod</span>
+                        </div>
+
+                        <div class="user-row">
+                            <span class="user-label">Вес</span>
+                            <span class="user-value">@item.WeightKg кг</span>
+                        </div>
+
+                        <div class="user-row">
+                            <span class="user-label">Дата принятия</span>
+                            <span class="user-value">@item.AcceptedAt.ToString("dd.MM.yyyy HH:mm")</span>
+                        </div>
+
+                    </div>
+
+                    <div class="status-badge @GetStatusClass(item.Status)">
+                        @item.Status
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+
+@code {
+
+    private List<ShipmentDto>? shipments;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            shipments = await Http.GetFromJsonAsync<List<ShipmentDto>>("api/Shipments/my") ?? new();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading shipments: {ex.Message}");
+            shipments = new();
+        }
+    }
+
+    private string GetStatusClass(string status)
+    {
+        return status switch
+        {
+            "Принято" => "status-accepted",
+            "В пути" => "status-transit",
+            "Доставлено" => "status-delivered",
+            "Отменено" => "status-cancelled",
+            "Возврат" => "status-cancelled",
+            _ => "status-default"
+        };
+    }
+
+}

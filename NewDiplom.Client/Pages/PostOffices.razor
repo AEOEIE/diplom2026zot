@@ -1,0 +1,374 @@
+﻿@page "/post-offices"
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using NewDiplom.Client.DTOs
+
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthProvider
+
+<div class="page">
+
+    <div class="top-panel">
+
+        <input class="search-input"
+               placeholder="Поиск отделения..."
+               @bind="searchText"
+               @bind:event="oninput" />
+
+        <select class="filter-select"
+                @bind="selectedFilter">
+
+            <option value="all">
+                Все
+            </option>
+
+            <option value="active">
+                Активные
+            </option>
+
+            <option value="inactive">
+                Неактивные
+            </option>
+
+        </select>
+
+        @if (!isReadOnly)
+        {
+            <button class="add-button"
+                    @onclick="OpenCreate">
+                + Добавить
+            </button>
+        }
+
+    </div>
+
+    @if (FilteredItems.Count == 0)
+    {
+        <div class="empty-block">
+            Ничего не найдено
+        </div>
+    }
+    else
+    {
+        <div class="cards-container">
+
+            @foreach (var item in FilteredItems)
+            {
+                <div class="office-card">
+
+                    <div class="office-header">
+
+                        <div class="office-name">
+                            @item.Name
+                        </div>
+
+                        <div class="office-code">
+                            @item.Code
+                        </div>
+
+                    </div>
+
+                    <div class="office-info">
+
+                        <div class="info-row">
+
+                            <div class="info-label">
+                                Адрес
+                            </div>
+
+                            <div class="info-value">
+                                @item.Address
+                            </div>
+
+                        </div>
+
+                        <div class="info-row">
+
+                            <div class="info-label">
+                                Телефон
+                            </div>
+
+                            <div class="info-value">
+                                @(string.IsNullOrWhiteSpace(item.Phone)
+                                                        ? "-"
+                                                        : item.Phone)
+                                                                 </div>
+
+                        </div>
+
+                        <div class="info-row">
+
+                            <div class="info-label">
+                                Время работы
+                            </div>
+
+                            <div class="info-value">
+                                @(string.IsNullOrWhiteSpace(item.WorkingHours)
+                                                        ? "-"
+                                                        : item.WorkingHours)
+                                                                        </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="office-status @(item.IsActive ? "active" : "inactive")">
+
+                        @(item.IsActive
+                                        ? "Активно"
+                                        : "Неактивно")
+
+            </div>
+
+            @if (!isReadOnly)
+                    {
+                        <button class="edit-button"
+                                @onclick="() => OpenEdit(item)">
+                            Редактировать
+                        </button>
+                    }
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+
+@if (showModal)
+{
+    <div class="modal-background"
+         @onclick="CloseModal">
+
+        <div class="modal-window"
+             @onclick:stopPropagation="true">
+
+            <h2 class="modal-title">
+                @(isEdit
+                            ? "Редактирование отделения"
+                            : "Добавление отделения")
+        </h2>
+
+            <div class="form-group">
+
+                <label>
+                    Код
+                </label>
+
+                <input class="form-input"
+                       @bind="model.Code" />
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+                    Название
+                </label>
+
+                <input class="form-input"
+                       @bind="model.Name" />
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+                    Адрес
+                </label>
+
+                <input class="form-input"
+                       @bind="model.Address" />
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+                    Телефон
+                </label>
+
+                <input class="form-input"
+                       @bind="model.Phone" />
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+                    Время работы
+                </label>
+
+                <input class="form-input"
+                       @bind="model.WorkingHours" />
+
+            </div>
+
+        @if (isEdit)
+            {
+                <div class="checkbox-group">
+
+                    <InputCheckbox @bind-Value="editIsActive" />
+
+                    <span>
+                        Активно
+                    </span>
+
+                </div>
+            }
+
+            <div class="buttons-row">
+
+                <button class="cancel-button"
+                        @onclick="CloseModal">
+                    Отмена
+                </button>
+
+                <button class="save-button"
+                        @onclick="Save">
+                    Сохранить
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+@code {
+
+    private List<PostOfficeDto> items = new();
+
+    private string searchText = "";
+
+    private string selectedFilter = "all";
+
+    private bool showModal;
+
+    private bool isEdit;
+
+    private bool isReadOnly;
+
+    private bool editIsActive = true;
+
+    private int editingId;
+
+    private CreatePostOfficeDto model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        items = await Http
+            .GetFromJsonAsync<List<PostOfficeDto>>(
+                "api/PostOffices")
+            ?? new();
+
+        var authState =
+            await AuthProvider
+                .GetAuthenticationStateAsync();
+
+        var user = authState.User;
+
+        var role = user.FindFirst(
+            ClaimTypes.Role)?.Value;
+
+        isReadOnly =
+            role == "DepartmentHead";
+    }
+
+    private List<PostOfficeDto> FilteredItems =>
+        items
+            .Where(x =>
+
+                (string.IsNullOrWhiteSpace(searchText)
+                 || x.Name.Contains(
+                     searchText,
+                     StringComparison.OrdinalIgnoreCase)
+                 || x.Address.Contains(
+                     searchText,
+                     StringComparison.OrdinalIgnoreCase))
+
+                &&
+
+                (selectedFilter == "all"
+                 || (selectedFilter == "active"
+                     && x.IsActive)
+                 || (selectedFilter == "inactive"
+                     && !x.IsActive))
+
+            )
+            .ToList();
+
+    private void OpenCreate()
+    {
+        model = new CreatePostOfficeDto();
+
+        editIsActive = true;
+
+        isEdit = false;
+
+        showModal = true;
+    }
+
+    private void OpenEdit(PostOfficeDto item)
+    {
+        editingId = item.Id;
+
+        model = new CreatePostOfficeDto
+        {
+            Code = item.Code,
+            Name = item.Name,
+            Address = item.Address,
+            Phone = item.Phone,
+            WorkingHours = item.WorkingHours
+        };
+
+        editIsActive = item.IsActive;
+
+        isEdit = true;
+
+        showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+    private async Task Save()
+    {
+        if (isEdit)
+        {
+            var update =
+                new UpdatePostOfficeDto
+                {
+                    Code = model.Code,
+                    Name = model.Name,
+                    Address = model.Address,
+                    Phone = model.Phone,
+                    WorkingHours = model.WorkingHours,
+                    IsActive = editIsActive
+                };
+
+            await Http.PutAsJsonAsync(
+                $"api/PostOffices/{editingId}",
+                update);
+        }
+        else
+        {
+            await Http.PostAsJsonAsync(
+                "api/PostOffices",
+                model);
+        }
+
+        items = await Http
+            .GetFromJsonAsync<List<PostOfficeDto>>(
+                "api/PostOffices")
+            ?? new();
+
+        showModal = false;
+    }
+
+}

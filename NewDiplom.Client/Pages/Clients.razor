@@ -1,0 +1,755 @@
+﻿@* @page "/clients"
+
+@using NewDiplom.Client.DTOs
+@using NewDiplom.Client.DTOs.Users
+
+@inject HttpClient Http
+
+<div class="page">
+
+    <div class="top-panel">
+
+        <input class="search-input"
+               placeholder="Поиск клиента..."
+               @bind="searchText"
+               @bind:event="oninput" />
+
+        <select class="filter-select"
+                @bind="selectedStatus">
+
+            <option value="all">
+                Все
+            </option>
+
+            <option value="active">
+                Активные
+            </option>
+
+            <option value="inactive">
+                Неактивные
+            </option>
+
+        </select>
+
+        <button class="add-button"
+                @onclick="OpenCreate">
+
+            + Добавить клиента
+
+        </button>
+
+    </div>
+
+    @if (FilteredClients.Count == 0)
+    {
+        <div class="empty-block">
+            Клиенты не найдены
+        </div>
+    }
+    else
+    {
+        <div class="cards-container">
+
+            @foreach (var item in FilteredClients)
+            {
+                <div class="service-card">
+
+                    <div class="service-header">
+
+                        <div class="service-name">
+                            @item.LastName @item.FirstName
+                        </div>
+
+                        <div class="service-price">
+                            @item.Role
+                        </div>
+
+                    </div>
+
+                    <div class="service-description">
+
+                        <div>
+                            Логин: @item.Login
+                        </div>
+
+                        <div>
+                            Телефон: @item.Phone
+                        </div>
+
+                        <div>
+                            Email: @item.Email
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(item.PassportSeries))
+                        {
+                            <div>
+                                Паспорт: @item.PassportSeries @item.PassportNumber
+                            </div>
+                        }
+
+                    </div>
+
+                    <div class="service-status @(item.IsActive ? "active" : "inactive")">
+                        @(item.IsActive ? "Активен" : "Неактивен")
+                    </div>
+
+                    <button class="edit-button"
+                            @onclick="() => OpenEdit(item)">
+
+                        Редактировать
+
+                    </button>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+
+@if (showModal)
+{
+    <div class="modal-background"
+         @onclick="CloseModal">
+
+        <div class="modal-window"
+             @onclick:stopPropagation="true">
+
+            <h2 class="modal-title">
+
+                @(isEdit ? "Редактирование клиента" : "Добавление клиента")
+
+            </h2>
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="error-message">
+                    @errorMessage
+                </div>
+            }
+
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label>Фамилия</label>
+                    <input class="form-input"
+                           @bind="model.LastName" />
+                </div>
+
+                <div class="form-group">
+                    <label>Имя</label>
+                    <input class="form-input"
+                           @bind="model.FirstName" />
+                </div>
+
+                <div class="form-group">
+                    <label>Отчество</label>
+                    <input class="form-input"
+                           @bind="model.MiddleName" />
+                </div>
+
+                <div class="form-group">
+                    <label>Телефон</label>
+                    <input class="form-input"
+                           @bind="model.Phone" />
+                </div>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input class="form-input"
+                           @bind="model.Email" />
+                </div>
+
+                <div class="form-group">
+                    <label>Логин</label>
+                    <input class="form-input"
+                           @bind="model.Login" />
+                </div>
+
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password"
+                           class="form-input"
+                           @bind="model.Password" />
+                </div>
+
+                <div class="form-group">
+                    <label>Серия паспорта</label>
+                    <input class="form-input"
+                           @bind="model.PassportSeries" />
+                </div>
+
+                <div class="form-group">
+                    <label>Номер паспорта</label>
+                    <input class="form-input"
+                           @bind="model.PassportNumber" />
+                </div>
+
+                <div class="form-group">
+                    <label>Кем выдан</label>
+                    <input class="form-input"
+                           @bind="model.PassportIssuedBy" />
+                </div>
+
+                <div class="form-group">
+                    <label>Дата выдачи</label>
+                    <input type="date"
+                           class="form-input"
+                           @bind="model.PassportIssueDate" />
+                </div>
+
+                <div class="form-group">
+                    <label>Адрес регистрации</label>
+                    <input class="form-input"
+                           @bind="model.RegistrationAddress" />
+                </div>
+
+            </div>
+
+            @if (isEdit)
+            {
+                <div class="checkbox-group">
+                    <InputCheckbox @bind-Value="model.IsActive" />
+                    <span>Активен</span>
+                </div>
+            }
+
+            <div class="buttons-row">
+
+                <button class="cancel-button"
+                        @onclick="CloseModal">
+                    Отмена
+                </button>
+
+                <button class="save-button"
+                        @onclick="Save">
+                    Сохранить
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+@code {
+
+    private List<UserDto> clients = new();
+
+    private string searchText = "";
+    private string selectedStatus = "all";
+
+    private bool showModal;
+    private bool isEdit;
+    private int editingId;
+    private string? errorMessage;
+
+    private UpdateEmployeeRequest model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            clients = await Http.GetFromJsonAsync<List<UserDto>>("api/Clients") ?? new();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading clients: {ex.Message}");
+        }
+    }
+
+    private List<UserDto> FilteredClients =>
+        clients
+            .Where(x =>
+                string.IsNullOrWhiteSpace(searchText)
+                ||
+                $"{x.LastName} {x.FirstName}".Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                ||
+                x.Login.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                ||
+                x.Phone.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            )
+            .Where(x =>
+                selectedStatus == "all"
+                ||
+                (selectedStatus == "active" && x.IsActive)
+                ||
+                (selectedStatus == "inactive" && !x.IsActive)
+            )
+            .ToList();
+
+    private void OpenCreate()
+    {
+        model = new UpdateEmployeeRequest
+        {
+            IsActive = true
+        };
+        isEdit = false;
+        showModal = true;
+    }
+
+    private void OpenEdit(UserDto item)
+    {
+        editingId = item.Id;
+
+        model = new UpdateEmployeeRequest
+        {
+            FirstName = item.FirstName,
+            LastName = item.LastName,
+            MiddleName = item.MiddleName,
+            Phone = item.Phone,
+            Email = item.Email,
+            Login = item.Login,
+            PassportSeries = item.PassportSeries,
+            PassportNumber = item.PassportNumber,
+            PassportIssuedBy = item.PassportIssuedBy,
+            PassportIssueDate = item.PassportIssueDate,
+            RegistrationAddress = item.RegistrationAddress,
+            IsActive = item.IsActive
+        };
+
+        isEdit = true;
+        showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+    private async Task Save()
+    {
+        try
+        {
+            if (isEdit)
+            {
+                await Http.PutAsJsonAsync($"api/Clients/{editingId}", model);
+            }
+            else
+            {
+                var createRequest = new CreateEmployeeRequest
+                {
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+                    MiddleName = model.MiddleName,
+                    Phone = model.Phone,
+                    Email = model.Email,
+                    Login = model.Login,
+                    Password = model.Password ?? "",
+                    PassportSeries = model.PassportSeries,
+                    PassportNumber = model.PassportNumber,
+                    PassportIssuedBy = model.PassportIssuedBy,
+                    PassportIssueDate = model.PassportIssueDate,
+                    RegistrationAddress = model.RegistrationAddress
+                };
+
+                await Http.PostAsJsonAsync("api/Clients", createRequest);
+            }
+
+            await LoadData();
+            showModal = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving client: {ex.Message}");
+        }
+    }
+} *@
+@page "/clients"
+
+@using NewDiplom.Client.DTOs
+@using NewDiplom.Client.DTOs.Users
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+
+@inject HttpClient Http
+
+<div class="page">
+
+    <div class="top-panel">
+
+        <input class="search-input"
+               placeholder="Поиск клиента..."
+               @bind="searchText"
+               @bind:event="oninput" />
+
+        <select class="filter-select"
+                @bind="selectedStatus">
+
+            <option value="all">
+                Все
+            </option>
+
+            <option value="active">
+                Активные
+            </option>
+
+            <option value="inactive">
+                Неактивные
+            </option>
+
+        </select>
+
+        <button class="add-button"
+                @onclick="OpenCreate">
+
+            + Добавить клиента
+
+        </button>
+
+    </div>
+
+    @if (FilteredClients.Count == 0)
+    {
+        <div class="empty-block">
+            Клиенты не найдены
+        </div>
+    }
+    else
+    {
+        <div class="cards-container">
+
+            @foreach (var item in FilteredClients)
+            {
+                <div class="service-card">
+
+                    <div class="service-header">
+
+                        <div class="service-name">
+                            @item.LastName @item.FirstName
+                        </div>
+
+                        <div class="service-price">
+                            @item.Role
+                        </div>
+
+                    </div>
+
+                    <div class="service-description">
+
+                        <div>
+                            Логин: @item.Login
+                        </div>
+
+                        <div>
+                            Телефон: @item.Phone
+                        </div>
+
+                        <div>
+                            Email: @item.Email
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(item.PassportSeries))
+                        {
+                            <div>
+                                Паспорт: @item.PassportSeries @item.PassportNumber
+                            </div>
+                        }
+
+                    </div>
+
+                    <div class="service-status @(item.IsActive ? "active" : "inactive")">
+                        @(item.IsActive ? "Активен" : "Неактивен")
+                    </div>
+
+                    <button class="edit-button"
+                            @onclick="() => OpenEdit(item)">
+
+                        Редактировать
+
+                    </button>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+
+@if (showModal)
+{
+    <div class="modal-background"
+         @onclick="CloseModal">
+
+        <div class="modal-window"
+             @onclick:stopPropagation="true">
+
+            <h2 class="modal-title">
+
+                @(isEdit ? "Редактирование клиента" : "Добавление клиента")
+
+            </h2>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="error-message">
+                    @errorMessage
+                </div>
+            }
+
+            <EditForm Model="model"
+                      OnValidSubmit="Save"
+                      FormName="clientForm">
+
+                <DataAnnotationsValidator />
+                <ValidationSummary class="validation-summary" />
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label>Фамилия</label>
+                        <InputText class="form-input" @bind-Value="model.LastName" />
+                        <ValidationMessage For="@(() => model.LastName)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Имя</label>
+                        <InputText class="form-input" @bind-Value="model.FirstName" />
+                        <ValidationMessage For="@(() => model.FirstName)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Отчество</label>
+                        <InputText class="form-input" @bind-Value="model.MiddleName" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Телефон</label>
+                        <InputText class="form-input" @bind-Value="model.Phone" />
+                        <ValidationMessage For="@(() => model.Phone)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email</label>
+                        <InputText class="form-input" @bind-Value="model.Email" />
+                        <ValidationMessage For="@(() => model.Email)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Логин</label>
+                        <InputText class="form-input" @bind-Value="model.Login" />
+                        <ValidationMessage For="@(() => model.Login)" />
+                    </div>
+
+                    @if (!isEdit)
+                    {
+                        <div class="form-group">
+                            <label>Пароль</label>
+                            <InputText type="password" class="form-input" @bind-Value="model.Password" />
+                            <ValidationMessage For="@(() => model.Password)" />
+                        </div>
+                    }
+
+                    <div class="form-group">
+                        <label>Серия паспорта</label>
+                        <InputText class="form-input" @bind-Value="model.PassportSeries" />
+                        <ValidationMessage For="@(() => model.PassportSeries)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Номер паспорта</label>
+                        <InputText class="form-input" @bind-Value="model.PassportNumber" />
+                        <ValidationMessage For="@(() => model.PassportNumber)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Кем выдан</label>
+                        <InputText class="form-input" @bind-Value="model.PassportIssuedBy" />
+                        <ValidationMessage For="@(() => model.PassportIssuedBy)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Дата выдачи</label>
+                        <InputDate class="form-input" @bind-Value="model.PassportIssueDate" />
+                        <ValidationMessage For="@(() => model.PassportIssueDate)" />
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Адрес регистрации</label>
+                        <InputText class="form-input" @bind-Value="model.RegistrationAddress" />
+                        <ValidationMessage For="@(() => model.RegistrationAddress)" />
+                    </div>
+
+                </div>
+
+                @if (isEdit)
+                {
+                    <div class="checkbox-group">
+                        <InputCheckbox @bind-Value="model.IsActive" />
+                        <span>Активен</span>
+                    </div>
+                }
+
+                <div class="buttons-row">
+
+                    <button type="button"
+                            class="cancel-button"
+                            @onclick="CloseModal">
+                        Отмена
+                    </button>
+
+                    <button type="submit"
+                            class="save-button">
+                        Сохранить
+                    </button>
+
+                </div>
+
+            </EditForm>
+
+        </div>
+
+    </div>
+}
+
+@code {
+
+    private List<UserDto> clients = new();
+
+    private string searchText = "";
+    private string selectedStatus = "all";
+
+    private bool showModal;
+    private bool isEdit;
+    private int editingId;
+    private string? errorMessage;
+
+    private UpdateEmployeeRequest model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            clients = await Http.GetFromJsonAsync<List<UserDto>>("api/Clients") ?? new();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading clients: {ex.Message}");
+        }
+    }
+
+    private List<UserDto> FilteredClients =>
+        clients
+            .Where(x =>
+                string.IsNullOrWhiteSpace(searchText)
+                ||
+                $"{x.LastName} {x.FirstName}".Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                ||
+                x.Login.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                ||
+                x.Phone.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            )
+            .Where(x =>
+                selectedStatus == "all"
+                ||
+                (selectedStatus == "active" && x.IsActive)
+                ||
+                (selectedStatus == "inactive" && !x.IsActive)
+            )
+            .ToList();
+
+    private void OpenCreate()
+    {
+        errorMessage = null;
+
+        model = new UpdateEmployeeRequest
+        {
+            IsActive = true,
+            PassportIssueDate = DateTime.Today // значение по умолчанию
+        };
+
+        isEdit = false;
+        showModal = true;
+    }
+
+    private void OpenEdit(UserDto item)
+    {
+        errorMessage = null;
+        editingId = item.Id;
+
+        model = new UpdateEmployeeRequest
+        {
+            FirstName = item.FirstName,
+            LastName = item.LastName,
+            MiddleName = item.MiddleName,
+            Phone = item.Phone,
+            Email = item.Email,
+            Login = item.Login,
+            PassportSeries = item.PassportSeries,
+            PassportNumber = item.PassportNumber,
+            PassportIssuedBy = item.PassportIssuedBy,
+            PassportIssueDate = item.PassportIssueDate,
+            RegistrationAddress = item.RegistrationAddress,
+            IsActive = item.IsActive
+        };
+
+        isEdit = true;
+        showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+    private async Task Save()
+    {
+        errorMessage = null;
+
+        try
+        {
+            HttpResponseMessage response;
+
+            if (isEdit)
+            {
+                response = await Http.PutAsJsonAsync($"api/Clients/{editingId}", model);
+            }
+            else
+            {
+                var createRequest = new CreateEmployeeRequest
+                {
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+                    MiddleName = model.MiddleName,
+                    Phone = model.Phone,
+                    Email = model.Email,
+                    Login = model.Login,
+                    Password = model.Password ?? "",
+                    PassportSeries = model.PassportSeries,
+                    PassportNumber = model.PassportNumber,
+                    PassportIssuedBy = model.PassportIssuedBy,
+                    PassportIssueDate = model.PassportIssueDate,
+                    RegistrationAddress = model.RegistrationAddress
+                };
+
+                response = await Http.PostAsJsonAsync("api/Clients", createRequest);
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                errorMessage = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            await LoadData();
+            showModal = false;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            Console.WriteLine($"Error saving client: {ex.Message}");
+        }
+    }
+}

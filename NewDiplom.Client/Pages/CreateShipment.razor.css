@@ -1,0 +1,133 @@
+﻿.page {
+    padding: 30px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.page-card {
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(14px);
+    border-radius: 24px;
+    padding: 35px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.modal-title {
+    color: #7d129d;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+    .form-group label {
+        font-size: 14px;
+        color: #666;
+        font-weight: 600;
+    }
+
+.form-input {
+    height: 48px;
+    border: none;
+    border-radius: 14px;
+    padding: 0 15px;
+    background: rgba(255, 255, 255, 0.8);
+    outline: none;
+    font-size: 14px;
+    transition: 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+    .form-input:focus {
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 0 0 2px #9e16c7;
+    }
+
+    .form-input:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .form-input::placeholder {
+        color: #bbb;
+    }
+
+select.form-input {
+    cursor: pointer;
+}
+
+textarea.form-input {
+    min-height: 100px;
+    padding-top: 12px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.buttons-row {
+    display: flex;
+    gap: 15px;
+    margin-top: 24px;
+}
+
+.save-button {
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: 14px;
+    background: #9e16c7;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 15px;
+}
+
+    .save-button:hover:not(:disabled) {
+        background: #b145d2;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(158, 22, 199, 0.3);
+    }
+
+    .save-button:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    .save-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+@media (max-width: 768px) {
+    .page {
+        padding: 15px;
+    }
+
+    .page-card {
+        padding: 25px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-title {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-card {
+        padding: 20px;
+    }
+}

@@ -1,0 +1,83 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace NewDiplom.Client.DTOs.Users;
+
+public class UpdateEmployeeRequest
+{
+    //public string FirstName { get; set; } = string.Empty;
+
+    //public string LastName { get; set; } = string.Empty;
+
+    //public string? MiddleName { get; set; }
+
+    //public string Phone { get; set; } = string.Empty;
+
+    //public string Email { get; set; } = string.Empty;
+
+    //public string Login { get; set; } = string.Empty;
+
+    //public int RoleId { get; set; }
+
+    //public int? PostOfficeId { get; set; }
+
+    //public bool IsActive { get; set; }
+
+    //public string PassportSeries { get; set; } = string.Empty;
+
+    //public string PassportNumber { get; set; } = string.Empty;
+
+    //public string PassportIssuedBy { get; set; } = string.Empty;
+
+    //public DateTime? PassportIssueDate { get; set; }
+
+    //public string RegistrationAddress { get; set; } = string.Empty;
+
+    //// если пустой — пароль не меняем
+    //public string? Password { get; set; }
+    [Required(ErrorMessage = "Введите имя")]
+    public string FirstName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Введите фамилию")]
+    public string LastName { get; set; } = string.Empty;
+
+    public string? MiddleName { get; set; }
+
+    [Required(ErrorMessage = "Введите телефон")]
+    [Phone(ErrorMessage = "Некорректный телефон")]
+    public string Phone { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Введите email")]
+    [EmailAddress(ErrorMessage = "Некорректный email")]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Введите логин")]
+    [StringLength(20, MinimumLength = 4,
+        ErrorMessage = "Логин должен быть от 4 до 20 символов")]
+    [RegularExpression(@"^[a-zA-Z0-9_]+$",
+        ErrorMessage = "Логин может содержать только латиницу, цифры и _")]
+    public string Login { get; set; } = string.Empty;
+
+    public int RoleId { get; set; }
+
+    public int? PostOfficeId { get; set; }
+
+    public bool IsActive { get; set; }
+
+    [Required(ErrorMessage = "Введите серию паспорта")]
+    public string PassportSeries { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Введите номер паспорта")]
+    public string PassportNumber { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Введите кем выдан паспорт")]
+    public string PassportIssuedBy { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Введите дату выдачи паспорта")]
+    public DateTime? PassportIssueDate { get; set; }
+
+    [Required(ErrorMessage = "Введите адрес регистрации")]
+    public string RegistrationAddress { get; set; } = string.Empty;
+
+    // пароль необязателен
+    public string? Password { get; set; }
+}

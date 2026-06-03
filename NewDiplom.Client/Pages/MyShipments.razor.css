@@ -1,0 +1,170 @@
+﻿.page {
+    padding: 30px;
+}
+
+.modal-title {
+    color: #7d129d;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 30px;
+}
+
+/* Карточки */
+.cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+}
+
+.service-card {
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(14px);
+    border-radius: 24px;
+    padding: 22px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+    .service-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+    }
+
+.service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    gap: 10px;
+}
+
+.service-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: #7d129d;
+    line-height: 1.2;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+
+.service-price {
+    font-size: 14px;
+    font-weight: 700;
+    color: #9e16c7;
+    white-space: nowrap;
+    background: rgba(158, 22, 199, 0.1);
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+.service-description {
+    color: #555;
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.user-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.user-label {
+    font-size: 12px;
+    color: #888;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.user-value {
+    font-size: 14px;
+    font-weight: 500;
+    word-break: break-word;
+    color: #333;
+}
+
+/* Статусы */
+.status-badge {
+    width: fit-content;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: auto;
+}
+
+.status-accepted {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #90caf9;
+}
+
+.status-transit {
+    background: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffcc80;
+}
+
+.status-delivered {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+}
+
+.status-cancelled {
+    background: #fce4ec;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+}
+
+.status-default {
+    background: #f3e5f5;
+    color: #6a1b9a;
+    border: 1px solid #ce93d8;
+}
+
+/* Пустой блок */
+.empty-block {
+    text-align: center;
+    padding: 60px;
+    font-size: 18px;
+    color: #777;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 24px;
+    backdrop-filter: blur(10px);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .page {
+        padding: 15px;
+    }
+
+    .cards-container {
+        grid-template-columns: 1fr;
+    }
+
+    .service-name {
+        font-size: 18px;
+    }
+
+    .modal-title {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .service-card {
+        padding: 16px;
+    }
+
+    .service-header {
+        flex-direction: column;
+    }
+}

@@ -1,0 +1,697 @@
+﻿@page "/shipments"
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using NewDiplom.Client.DTOs
+@using NewDiplom.Client.DTOs.Shipments
+@using NewDiplom.Client.DTOs.Users
+@using NewDiplom.DTOs.Shipments
+
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthProvider
+
+<div class="page">
+
+    <div class="top-panel">
+
+        <input class="search-input"
+               placeholder="Поиск по трек-номеру или получателю..."
+               @bind="searchText"
+               @bind:event="oninput" />
+
+        <select class="filter-select"
+                @bind="selectedStatus">
+
+            <option value="all">
+                Все статусы
+            </option>
+
+            @foreach (var status in statuses)
+            {
+                <option value="@status.Name">
+                    @status.Name
+                </option>
+            }
+
+        </select>
+        @if (!isReadOnly)
+        {
+            <button class="add-button"
+                    @onclick="OpenCreate">
+
+                + Добавить
+
+            </button>
+        }
+
+    </div>
+
+    @if (FilteredShipments.Count == 0)
+    {
+        <div class="empty-block">
+            Отправления не найдены
+        </div>
+    }
+    else
+    {
+        <div class="cards-container">
+
+            @foreach (var item in FilteredShipments)
+            {
+                <div class="service-card">
+
+                    <div class="service-header">
+
+                        <div class="service-name">
+                            @item.TrackingNumber
+                        </div>
+
+                        <div class="service-price">
+                            @item.TotalPrice.ToString("C")
+                        </div>
+
+                    </div>
+
+                    <div class="service-description">
+
+                        <div class="user-row">
+                            <span class="user-label">Получатель</span>
+                            <span class="user-value">@item.RecipientName</span>
+                        </div>
+
+                        <div class="user-row">
+                            <span class="user-label">Телефон получателя</span>
+                            <span class="user-value">@item.RecipientPhone</span>
+                        </div>
+
+                        <div class="user-row">
+                            <span class="user-label">Откуда</span>
+                            <span class="user-value">@item.CurrentOfficeName</span>
+                        </div>
+
+                        <div class="user-row">
+                            <span class="user-label">Куда</span>
+                            <span class="user-value">@item.DestinationOfficeName</span>
+                        </div>
+
+                        <div class="user-row">
+                            <span class="user-label">Адрес доставки</span>
+                            <span class="user-value">@item.DestinationAddress</span>
+                        </div>
+
+                        <div class="user-row">
+                            <span class="user-label">Тип услуги</span>
+                            <span class="user-value">@item.ServiceType</span>
+                        </div>
+
+                        <div class="user-row">
+                            <span class="user-label">Способ доставки</span>
+                            <span class="user-value">@item.DeliveryMethod</span>
+                        </div>
+
+                        <div class="user-row">
+                            <span class="user-label">Вес</span>
+                            <span class="user-value">@item.WeightKg кг</span>
+                        </div>
+
+                        <div class="user-row">
+                            <span class="user-label">Дата принятия</span>
+                            <span class="user-value">@item.AcceptedAt.ToString("dd.MM.yyyy HH:mm")</span>
+                        </div>
+
+                    </div>
+
+                    <div class="status-badge @GetStatusClass(item.Status)">
+                        @item.Status
+                    </div>
+                    @if (!isReadOnly)
+                    {
+                        <button class="edit-button"
+                                @onclick="() => OpenStatusChange(item)">
+
+                            Изменить статус
+
+                        </button>
+                    }
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+
+@* Модальное окно создания отправления *@
+@if (showCreateModal)
+{
+    <div class="modal-background"
+         @onclick="CloseCreateModal">
+
+        <div class="modal-window"
+             @onclick:stopPropagation="true">
+
+            <h2 class="modal-title">
+                Добавление отправления
+            </h2>
+
+            <div class="form-grid">
+
+                @* Выбор клиента для сотрудников *@
+                @if (!isClient)
+                {
+                    <div class="form-group">
+                        <label>Клиент *</label>
+                        <select class="form-input"
+                                @bind="createModel.ClientId">
+                            <option value="">Выберите клиента</option>
+                            @foreach (var client in ActiveClients) // Только активные клиенты
+                            {
+                                <option value="@client.Id">
+                                    @client.LastName @client.FirstName (@client.Phone)
+                                </option>
+                            }
+                        </select>
+                    </div>
+                }
+
+                <div class="form-group">
+                    <label>Получатель *</label>
+                    <input class="form-input"
+                           @bind="createModel.RecipientName"
+                           placeholder="ФИО получателя" />
+                </div>
+
+                <div class="form-group">
+                    <label>Телефон получателя *</label>
+                    <input class="form-input"
+                           @bind="createModel.RecipientPhone"
+                           placeholder="+7 (___) ___-__-__" />
+                </div>
+
+                @* Отделение отправления (только активные) *@
+                <div class="form-group">
+                    <label>Отделение отправления *</label>
+                    <select class="form-input"
+                            @bind="createModel.CurrentOfficeId">
+                        <option value="0">Выберите отделение</option>
+                        @foreach (var office in ActiveOffices) // Только активные отделения
+                        {
+                            <option value="@office.Id">
+                                @office.Code - @office.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                @* Отделение назначения (только активные) *@
+                <div class="form-group">
+                    <label>Отделение назначения *</label>
+                    <select class="form-input"
+                            @bind="selectedDestinationOfficeId"
+                            @bind:after="OnDestinationOfficeSelected">
+                        <option value="">Выберите отделение</option>
+                        @foreach (var office in ActiveOffices) // Только активные отделения
+                        {
+                            <option value="@office.Id">
+                                @office.Code - @office.Address
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Адрес доставки</label>
+                    <input class="form-input"
+                           @bind="createModel.DestinationAddress"
+                           placeholder="Выберите отделение назначения" />
+                </div>
+
+                <div class="form-group">
+                    <label>Тип услуги *</label>
+                    <select class="form-input"
+                            @bind="createModel.ServiceTypeId">
+                        <option value="0">Выберите тип</option>
+                        @foreach (var service in ActiveServiceTypes) // Только активные услуги
+                        {
+                            <option value="@service.Id">
+                                @service.Name - @service.BasePrice.ToString("C")
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Способ доставки *</label>
+                    <select class="form-input"
+                            @bind="createModel.DeliveryMethodId">
+                        <option value="0">Выберите способ</option>
+                        @foreach (var method in ActiveDeliveryMethods) // Только активные способы доставки
+                        {
+                            <option value="@method.Id">
+                                @method.Name (+@method.AdditionalPrice.ToString("C"))
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Вес (кг) *</label>
+                    <input type="number"
+                           step="0.01"
+                           min="0.01"
+                           class="form-input"
+                           @bind="createModel.WeightKg"
+                           placeholder="0.00" />
+                </div>
+
+                <div class="form-group">
+                    <label>Объявленная ценность (₽)</label>
+                    <input type="number"
+                           step="0.01"
+                           min="0"
+                           class="form-input"
+                           @bind="createModel.DeclaredValue"
+                           placeholder="0.00" />
+                </div>
+
+            </div>
+
+            <div class="form-group" style="margin-top: 18px;">
+                <label>Примечания</label>
+                <textarea class="form-input"
+                          @bind="createModel.Notes"
+                          rows="3"
+                          placeholder="Дополнительная информация..."></textarea>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div style="color: #c62828; margin-top: 12px; font-size: 14px; font-weight: 500;">
+                    @errorMessage
+                </div>
+            }
+
+            <div class="buttons-row">
+
+                <button class="cancel-button"
+                        @onclick="CloseCreateModal">
+                    Отмена
+                </button>
+
+                <button class="save-button"
+                        @onclick="SaveShipment">
+                    Сохранить
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+@* Модальное окно изменения статуса *@
+@if (showStatusModal)
+{
+    <div class="modal-background"
+         @onclick="CloseStatusModal">
+
+        <div class="modal-window"
+             @onclick:stopPropagation="true"
+             style="width: 500px;">
+
+            <h2 class="modal-title">
+                Изменение статуса
+            </h2>
+
+            <div style="margin-bottom: 20px; padding: 12px; background: rgba(255,255,255,0.6); border-radius: 12px;">
+                <strong>Отправление:</strong> @selectedShipment?.TrackingNumber<br>
+                <strong>Текущий статус:</strong>
+                <span class="status-badge @GetStatusClass(selectedShipment?.Status ?? "")" style="margin: 8px 0 0 0;">
+                    @selectedShipment?.Status
+                </span>
+            </div>
+
+            <div class="form-group">
+                <label>Новый статус *</label>
+                <select class="form-input"
+                        @bind="statusModel.StatusId">
+                    <option value="0">Выберите статус</option>
+                    @foreach (var status in statuses)
+                    {
+                        <option value="@status.Id">
+                            @status.Name @(status.IsFinal ? "(финальный)" : "")
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-top: 18px;">
+                <label>Комментарий</label>
+                <textarea class="form-input"
+                          @bind="statusModel.Comment"
+                          rows="3"
+                          placeholder="Причина изменения статуса..."></textarea>
+            </div>
+
+            <div class="buttons-row">
+
+                <button class="cancel-button"
+                        @onclick="CloseStatusModal">
+                    Отмена
+                </button>
+
+                <button class="save-button"
+                        @onclick="UpdateStatus">
+                    Сохранить
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+@code {
+
+    private List<ShipmentDto> shipments = new();
+    private List<ShipmentStatusDto> statuses = new();
+    private List<UserDto> clients = new();
+    private List<ServiceTypeDto> serviceTypes = new();
+    private List<DeliveryMethodDto> deliveryMethods = new();
+    private List<PostOfficeDto> offices = new();
+
+    private string searchText = "";
+    private string selectedStatus = "all";
+    private int? selectedDestinationOfficeId;
+    private bool isReadOnly;
+
+    private bool showCreateModal;
+    private bool showStatusModal;
+    private string errorMessage = "";
+
+    private CreateShipmentRequest createModel = new();
+    private UpdateShipmentStatusRequest statusModel = new();
+    private ShipmentDto? selectedShipment;
+
+    private bool isClient = false;
+
+    // Фильтрованные списки только с активными элементами
+    private List<UserDto> ActiveClients => clients?.Where(c => c.IsActive).ToList() ?? new();
+    private List<ServiceTypeDto> ActiveServiceTypes => serviceTypes?.Where(s => s.IsActive).ToList() ?? new();
+    private List<DeliveryMethodDto> ActiveDeliveryMethods => deliveryMethods?.Where(d => d.IsActive).ToList() ?? new();
+    private List<PostOfficeDto> ActiveOffices => offices?.Where(o => o.IsActive).ToList() ?? new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CheckUserRole();
+        await LoadData();
+        var authState =
+            await AuthProvider
+                .GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var role = user.FindFirst(
+            ClaimTypes.Role)?.Value;
+        isReadOnly =
+            role == "DepartmentHead";
+    }
+
+    private async Task CheckUserRole()
+    {
+        try
+        {
+            var authState = await AuthProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            isClient = user.IsInRole("Client");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error checking role: {ex.Message}");
+        }
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            shipments = await Http.GetFromJsonAsync<List<ShipmentDto>>("api/Shipments") ?? new();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading shipments: {ex.Message}");
+        }
+
+        try
+        {
+            statuses = await Http.GetFromJsonAsync<List<ShipmentStatusDto>>("api/ShipmentStatuses") ?? new();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading statuses: {ex.Message}");
+        }
+
+        try
+        {
+            var clientsList = await Http.GetFromJsonAsync<List<UserDto>>("api/Clients") ?? new();
+            clients = clientsList;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading clients: {ex.Message}");
+        }
+
+        try
+        {
+            var serviceTypesList = await Http.GetFromJsonAsync<List<ServiceTypeDto>>("api/ServiceTypes") ?? new();
+            serviceTypes = serviceTypesList;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading service types: {ex.Message}");
+        }
+
+        try
+        {
+            var deliveryMethodsList = await Http.GetFromJsonAsync<List<DeliveryMethodDto>>("api/DeliveryMethods") ?? new();
+            deliveryMethods = deliveryMethodsList;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading delivery methods: {ex.Message}");
+        }
+
+        try
+        {
+            var officesList = await Http.GetFromJsonAsync<List<PostOfficeDto>>("api/PostOffices") ?? new();
+            offices = officesList;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading offices: {ex.Message}");
+        }
+    }
+
+    private List<ShipmentDto> FilteredShipments =>
+        shipments
+            .Where(x =>
+                string.IsNullOrWhiteSpace(searchText)
+                ||
+                x.TrackingNumber.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                ||
+                x.RecipientName.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            )
+            .Where(x =>
+                selectedStatus == "all"
+                ||
+                x.Status == selectedStatus
+            )
+            .ToList();
+
+    private string GetStatusClass(string status)
+    {
+        return status switch
+        {
+            "Принято" => "status-accepted",
+            "В пути" => "status-transit",
+            "Доставлено" => "status-delivered",
+            "Отменено" => "status-cancelled",
+            "Возврат" => "status-cancelled",
+            _ => "status-default"
+        };
+    }
+
+    private void OnDestinationOfficeSelected()
+    {
+        if (selectedDestinationOfficeId.HasValue)
+        {
+            var office = ActiveOffices.FirstOrDefault(o => o.Id == selectedDestinationOfficeId.Value);
+            if (office != null)
+            {
+                createModel.DestinationAddress = office.Address;
+                createModel.DestinationOfficeId = office.Id;
+            }
+        }
+    }
+
+    private void OpenCreate()
+    {
+        createModel = new CreateShipmentRequest();
+        selectedDestinationOfficeId = null;
+        errorMessage = "";
+        showCreateModal = true;
+    }
+
+    private void CloseCreateModal()
+    {
+        showCreateModal = false;
+        errorMessage = "";
+    }
+
+    private async Task SaveShipment()
+    {
+        errorMessage = "";
+
+        if (!isClient && (!createModel.ClientId.HasValue || createModel.ClientId == 0))
+        {
+            errorMessage = "Выберите клиента";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(createModel.RecipientName))
+        {
+            errorMessage = "Укажите получателя";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(createModel.RecipientPhone))
+        {
+            errorMessage = "Укажите телефон получателя";
+            return;
+        }
+
+        if (createModel.CurrentOfficeId == 0)
+        {
+            errorMessage = "Выберите отделение отправления";
+            return;
+        }
+
+        if (createModel.DestinationOfficeId == 0)
+        {
+            errorMessage = "Выберите отделение назначения";
+            return;
+        }
+
+        if (createModel.CurrentOfficeId == createModel.DestinationOfficeId)
+        {
+            errorMessage = "Отделение отправления и назначения не могут совпадать";
+            return;
+        }
+
+        // Дополнительная проверка: выбранное отделение должно быть активным
+        var selectedOffice = ActiveOffices.FirstOrDefault(o => o.Id == createModel.CurrentOfficeId);
+        if (selectedOffice == null)
+        {
+            errorMessage = "Выбранное отделение отправления неактивно";
+            return;
+        }
+
+        var selectedDestinationOffice = ActiveOffices.FirstOrDefault(o => o.Id == createModel.DestinationOfficeId);
+        if (selectedDestinationOffice == null)
+        {
+            errorMessage = "Выбранное отделение назначения неактивно";
+            return;
+        }
+
+        if (createModel.ServiceTypeId == 0)
+        {
+            errorMessage = "Выберите тип услуги";
+            return;
+        }
+
+        // Проверка: выбранная услуга должна быть активной
+        var selectedService = ActiveServiceTypes.FirstOrDefault(s => s.Id == createModel.ServiceTypeId);
+        if (selectedService == null)
+        {
+            errorMessage = "Выбранный тип услуги неактивен";
+            return;
+        }
+
+        if (createModel.DeliveryMethodId == 0)
+        {
+            errorMessage = "Выберите способ доставки";
+            return;
+        }
+
+        // Проверка: выбранный способ доставки должен быть активным
+        var selectedMethod = ActiveDeliveryMethods.FirstOrDefault(d => d.Id == createModel.DeliveryMethodId);
+        if (selectedMethod == null)
+        {
+            errorMessage = "Выбранный способ доставки неактивен";
+            return;
+        }
+
+        if (createModel.WeightKg <= 0)
+        {
+            errorMessage = "Укажите вес отправления";
+            return;
+        }
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/Shipments", createModel);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData();
+                showCreateModal = false;
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Ошибка: {error}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Ошибка: {ex.Message}";
+        }
+    }
+
+    private void OpenStatusChange(ShipmentDto shipment)
+    {
+        selectedShipment = shipment;
+        statusModel = new UpdateShipmentStatusRequest();
+        showStatusModal = true;
+    }
+
+    private void CloseStatusModal()
+    {
+        showStatusModal = false;
+    }
+
+    private async Task UpdateStatus()
+    {
+        if (selectedShipment == null || statusModel.StatusId == 0)
+            return;
+
+        try
+        {
+            var response = await Http.PutAsJsonAsync(
+                $"api/Shipments/{selectedShipment.Id}/status",
+                statusModel);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData();
+                showStatusModal = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating status: {ex.Message}");
+        }
+    }
+
+}

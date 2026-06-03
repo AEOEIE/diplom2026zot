@@ -1,0 +1,130 @@
+﻿.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient( 135deg, #ecd0f4, #d8a2e9, #c573dd );
+    padding: 20px;
+}
+
+.auth-card {
+    width: 430px;
+    padding: 40px;
+    border-radius: 28px;
+    background: rgba(255,255,255,0.35);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+}
+
+.title {
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 35px;
+    color: #9e16c7;
+    font-weight: 700;
+}
+
+.switch-block {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.switch {
+    width: 70px;
+    height: 34px;
+    border-radius: 30px;
+    background: #d8a2e9;
+    position: relative;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.switch-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+    top: 3px;
+    left: 4px;
+    transition: 0.3s;
+}
+
+    .switch-circle.right {
+        left: 38px;
+    }
+
+.active-label {
+    color: #9e16c7;
+    font-weight: 700;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 18px;
+}
+
+    .form-group label {
+        margin-bottom: 6px;
+        color: #5f2d6f;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+.form-input {
+    height: 46px;
+    border: none;
+    border-radius: 14px;
+    padding: 0 15px;
+    background: rgba(255,255,255,0.75);
+    outline: none;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+    .form-input:focus {
+        background: rgba(255,255,255,0.95);
+        box-shadow: 0 0 0 3px rgba(158,22,199,0.15);
+    }
+
+.main-button {
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: 16px;
+    background: #9e16c7;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+    .main-button:hover {
+        background: #b145d2;
+        transform: translateY(-1px);
+    }
+
+.error-message {
+    background: #ffd6d6;
+    color: darkred;
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.success-message {
+    background: #d8ffd8;
+    color: darkgreen;
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}

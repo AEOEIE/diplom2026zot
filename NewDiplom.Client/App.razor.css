@@ -1,0 +1,21 @@
+﻿.form-input input {
+    height: 46px;
+    border: none;
+    border-radius: 14px;
+    padding: 0 15px;
+    background: rgba(255,255,255,0.8);
+    outline: none;
+    font-size: 15px;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+    .form-input input:focus {
+        box-shadow: 0 0 0 3px rgba(158,22,199,0.2);
+    }
+
+/* На случай ошибки валидации — красная обводка */
+.form-input.invalid input {
+    box-shadow: 0 0 0 2px #e53935;
+}

@@ -1,0 +1,366 @@
+﻿@page "/delivery-methods"
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using NewDiplom.Client.DTOs
+
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthProvider
+
+<div class="page">
+
+    <div class="top-panel">
+
+        <input class="search-input"
+               placeholder="Поиск способа доставки..."
+               @bind="searchText"
+               @bind:event="oninput" />
+
+        <select class="filter-select"
+                @bind="statusFilter">
+
+            <option value="all">
+                Все
+            </option>
+
+            <option value="active">
+                Активные
+            </option>
+
+            <option value="inactive">
+                Неактивные
+            </option>
+
+        </select>
+
+        @if (!isReadOnly)
+        {
+            <button class="add-button"
+                    @onclick="OpenCreate">
+                + Добавить
+            </button>
+        }
+
+    </div>
+
+    @if (FilteredItems.Count == 0)
+    {
+        <div class="empty-block">
+            Ничего не найдено
+        </div>
+    }
+    else
+    {
+        <div class="cards-container">
+
+            @foreach (var item in FilteredItems)
+            {
+                <div class="service-card">
+
+                    <div class="service-header">
+
+                        <div class="service-name">
+                            @item.Name
+                        </div>
+
+                        <div class="service-price">
+                            +@item.AdditionalPrice ₽
+                        </div>
+
+                    </div>
+
+                    <div class="service-description">
+
+                        Срок доставки:
+                        @item.EstimatedDaysMin -
+                        @item.EstimatedDaysMax дн.
+
+                    </div>
+
+                    <div class="service-status @(item.IsActive ? "active" : "inactive")">
+
+                        @(item.IsActive
+                                        ? "Активен"
+                                        : "Неактивен")
+
+            </div>
+
+            @if (!isReadOnly)
+                    {
+                        <button class="edit-button"
+                                @onclick="() => OpenEdit(item)">
+                            Редактировать
+                        </button>
+                    }
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+
+@if (showModal)
+{
+    <div class="modal-background"
+         @onclick="CloseModal">
+
+        <div class="modal-window"
+             @onclick:stopPropagation="true">
+
+            <h2 class="modal-title">
+
+                @(isEdit
+                            ? "Редактирование способа доставки"
+                            : "Добавление способа доставки")
+
+        </h2>
+
+            <div class="form-group">
+
+                <label>
+                    Название
+                </label>
+
+                <input class="form-input"
+                       @bind="model.Name" />
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+                    Дополнительная цена
+                </label>
+
+                <input type="number"
+                       class="form-input"
+                       @bind="model.AdditionalPrice" />
+
+            </div>
+
+            <div class="form-grid">
+
+                <div class="form-group">
+
+                    <label>
+                        Мин. дней
+                    </label>
+
+                    <input type="number"
+                           class="form-input"
+                           @bind="model.EstimatedDaysMin" />
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>
+                        Макс. дней
+                    </label>
+
+                    <input type="number"
+                           class="form-input"
+                           @bind="model.EstimatedDaysMax" />
+
+                </div>
+
+            </div>
+
+        @* @if (isEdit)
+            {
+                <div class="switch-row">
+
+                    <span>
+                        Активен
+                    </span>
+
+                    <div class="switch"
+                         @onclick="ToggleActive">
+
+                        <div class="switch-circle @(isActive ? "right" : "")">
+                        </div>
+
+                    </div>
+
+                </div>
+            } *@
+        @if (isEdit)
+            {
+                <div class="checkbox-group">
+
+                    <InputCheckbox @bind-Value="isActive" />
+
+                    <span>
+                        Активен
+                    </span>
+
+                </div>
+            }
+            <div class="buttons-row">
+
+                <button class="cancel-button"
+                        @onclick="CloseModal">
+                    Отмена
+                </button>
+
+                <button class="save-button"
+                        @onclick="Save">
+                    Сохранить
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+@code {
+
+    private List<DeliveryMethodDto> items = new();
+
+    private string searchText = "";
+
+    private string statusFilter = "all";
+
+    private bool showModal;
+
+    private bool isEdit;
+
+    private bool isReadOnly;
+
+    private bool isActive = true;
+
+    private int editingId;
+
+    private CreateDeliveryMethodDto model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        items = await Http
+            .GetFromJsonAsync<List<DeliveryMethodDto>>(
+                "api/DeliveryMethods")
+            ?? new();
+
+        var authState =
+            await AuthProvider
+                .GetAuthenticationStateAsync();
+
+        var user = authState.User;
+
+        var role = user.FindFirst(
+            ClaimTypes.Role)?.Value;
+
+        isReadOnly =
+            role == "DepartmentHead" || role == "Operator";
+    }
+
+    private List<DeliveryMethodDto> FilteredItems =>
+        items
+            .Where(x =>
+
+                (string.IsNullOrWhiteSpace(searchText)
+                 || x.Name.Contains(
+                     searchText,
+                     StringComparison.OrdinalIgnoreCase))
+
+                &&
+
+                (statusFilter == "all"
+                 || (statusFilter == "active"
+                     && x.IsActive)
+                 || (statusFilter == "inactive"
+                     && !x.IsActive))
+
+            )
+            .ToList();
+
+    private void OpenCreate()
+    {
+        model = new CreateDeliveryMethodDto();
+
+        isEdit = false;
+
+        isActive = true;
+
+        showModal = true;
+    }
+
+    private void OpenEdit(DeliveryMethodDto item)
+    {
+        editingId = item.Id;
+
+        model = new CreateDeliveryMethodDto
+        {
+            Name = item.Name,
+
+            AdditionalPrice =
+                item.AdditionalPrice,
+
+            EstimatedDaysMin =
+                item.EstimatedDaysMin,
+
+            EstimatedDaysMax =
+                item.EstimatedDaysMax
+        };
+
+        isActive = item.IsActive;
+
+        isEdit = true;
+
+        showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+    // private void ToggleActive()
+    // {
+    //     isActive = !isActive;
+    // }
+
+    private async Task Save()
+    {
+        if (isEdit)
+        {
+            var update =
+                new UpdateDeliveryMethodDto
+                {
+                    Name = model.Name,
+
+                    AdditionalPrice =
+                        model.AdditionalPrice,
+
+                    EstimatedDaysMin =
+                        model.EstimatedDaysMin,
+
+                    EstimatedDaysMax =
+                        model.EstimatedDaysMax,
+
+                    IsActive = isActive
+                };
+
+            await Http.PutAsJsonAsync(
+                $"api/DeliveryMethods/{editingId}",
+                update);
+        }
+        else
+        {
+            await Http.PostAsJsonAsync(
+                "api/DeliveryMethods",
+                model);
+        }
+
+        items = await Http
+            .GetFromJsonAsync<List<DeliveryMethodDto>>(
+                "api/DeliveryMethods")
+            ?? new();
+
+        showModal = false;
+    }
+
+}

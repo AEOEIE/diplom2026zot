@@ -1,0 +1,423 @@
+﻿/* ============ СТРАНИЦА ОТПРАВЛЕНИЙ ============ */
+
+.page {
+    padding: 30px;
+}
+
+.top-panel {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.search-input {
+    flex: 1;
+    height: 48px;
+    border: none;
+    border-radius: 16px;
+    padding: 0 18px;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(10px);
+    font-size: 15px;
+    outline: none;
+}
+
+    .search-input:focus {
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 0 0 2px #9e16c7;
+    }
+
+.filter-select {
+    width: 200px;
+    border: none;
+    border-radius: 16px;
+    padding: 0 15px;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(10px);
+    outline: none;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+    .filter-select:focus {
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 0 0 2px #9e16c7;
+    }
+
+.add-button {
+    border: none;
+    border-radius: 16px;
+    padding: 0 24px;
+    background: #9e16c7;
+    color: white;
+    font-weight: 600;
+    transition: 0.2s;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+    .add-button:hover {
+        background: #b145d2;
+        transform: translateY(-1px);
+    }
+
+    .add-button:active {
+        transform: translateY(0);
+    }
+
+/* ============ КАРТОЧКИ ОТПРАВЛЕНИЙ ============ */
+
+.cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+}
+
+.service-card {
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(14px);
+    border-radius: 24px;
+    padding: 22px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+    .service-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+    }
+
+.service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    gap: 10px;
+}
+
+.service-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: #7d129d;
+    line-height: 1.2;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+
+.service-price {
+    font-size: 14px;
+    font-weight: 700;
+    color: #9e16c7;
+    white-space: nowrap;
+}
+
+.service-description {
+    color: #555;
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.user-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.user-label {
+    font-size: 12px;
+    color: #888;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.user-value {
+    font-size: 14px;
+    font-weight: 500;
+    word-break: break-word;
+    color: #333;
+}
+
+/* ============ СТАТУСЫ ОТПРАВЛЕНИЙ ============ */
+
+.status-badge {
+    width: fit-content;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 18px;
+    display: inline-block;
+}
+
+.status-accepted {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #90caf9;
+}
+
+.status-transit {
+    background: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffcc80;
+}
+
+.status-delivered {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+}
+
+.status-cancelled {
+    background: #fce4ec;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+}
+
+.status-default {
+    background: #f3e5f5;
+    color: #6a1b9a;
+    border: 1px solid #ce93d8;
+}
+
+/* ============ КНОПКИ В КАРТОЧКАХ ============ */
+
+.edit-button {
+    width: 100%;
+    height: 44px;
+    border: none;
+    border-radius: 14px;
+    background: #d8a2e9;
+    color: #4c0b61;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+    .edit-button:hover {
+        background: #c989df;
+        transform: translateY(-1px);
+    }
+
+    .edit-button:active {
+        transform: translateY(0);
+    }
+
+/* ============ МОДАЛЬНЫЕ ОКНА ============ */
+
+.modal-background {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+}
+
+.modal-window {
+    width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(18px);
+    border-radius: 28px;
+    padding: 35px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+    animation: modalIn 0.3s ease;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-window::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-window::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-window::-webkit-scrollbar-thumb {
+    background: #ce93d8;
+    border-radius: 3px;
+}
+
+.modal-title {
+    text-align: center;
+    color: #7d129d;
+    margin-bottom: 28px;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+/* ============ ФОРМЫ ============ */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+    .form-group label {
+        font-size: 14px;
+        color: #666;
+        font-weight: 600;
+    }
+
+.form-input {
+    height: 48px;
+    border: none;
+    border-radius: 14px;
+    padding: 0 15px;
+    background: rgba(255, 255, 255, 0.8);
+    outline: none;
+    font-size: 14px;
+    transition: 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+    .form-input:focus {
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 0 0 2px #9e16c7;
+    }
+
+select.form-input {
+    cursor: pointer;
+}
+
+textarea.form-input {
+    min-height: 100px;
+    padding-top: 12px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+/* ============ КНОПКИ ФОРМ ============ */
+
+.buttons-row {
+    display: flex;
+    gap: 15px;
+    margin-top: 24px;
+}
+
+.cancel-button,
+.save-button {
+    flex: 1;
+    height: 48px;
+    border: none;
+    border-radius: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 15px;
+}
+
+.cancel-button {
+    background: #ececec;
+    color: #444;
+}
+
+    .cancel-button:hover {
+        background: #dddddd;
+        transform: translateY(-1px);
+    }
+
+    .cancel-button:active {
+        transform: translateY(0);
+    }
+
+.save-button {
+    background: #9e16c7;
+    color: white;
+}
+
+    .save-button:hover {
+        background: #b145d2;
+        transform: translateY(-1px);
+    }
+
+    .save-button:active {
+        transform: translateY(0);
+    }
+
+/* ============ ПУСТОЙ БЛОК ============ */
+
+.empty-block {
+    text-align: center;
+    padding: 60px;
+    font-size: 18px;
+    color: #777;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 24px;
+    backdrop-filter: blur(10px);
+}
+
+/* ============ АДАПТИВНОСТЬ ============ */
+
+@media (max-width: 768px) {
+    .page {
+        padding: 15px;
+    }
+
+    .top-panel {
+        flex-direction: column;
+    }
+
+    .search-input,
+    .filter-select,
+    .add-button {
+        width: 100%;
+    }
+
+    .cards-container {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-window {
+        width: 95%;
+        padding: 25px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .service-name {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .service-card {
+        padding: 16px;
+    }
+
+    .service-header {
+        flex-direction: column;
+    }
+
+    .buttons-row {
+        flex-direction: column;
+    }
+}

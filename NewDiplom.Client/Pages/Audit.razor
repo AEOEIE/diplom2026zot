@@ -1,0 +1,291 @@
+﻿@page "/audit"
+@attribute [Authorize(Roles = "Admin")]
+
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Authorization
+@using NewDiplom.Client.DTOs.Audit
+
+@inject HttpClient Http
+
+<div class="page">
+
+    <div class="top-panel">
+
+        <input class="search-input"
+               placeholder="Поиск..."
+               @bind="searchText"
+               @bind:event="oninput" />
+
+        <select class="filter-select"
+                @bind="selectedAction">
+
+            <option value="all">Все действия</option>
+
+            <option value="Create">Создание</option>
+            <option value="Update">Изменение</option>
+            <option value="Delete">Удаление</option>
+
+            <option value="Login">Вход</option>
+            <option value="LoginFailed">Ошибка входа</option>
+
+            <option value="UpdateStatus">Смена статуса</option>
+
+        </select>
+
+        <select class="filter-select"
+                @bind="selectedTable">
+
+            <option value="all">Все таблицы</option>
+
+            <option value="Users">Пользователи</option>
+            <option value="Clients">Клиенты</option>
+            <option value="Shipments">Отправления</option>
+            <option value="PostOffices">Отделения</option>
+            <option value="ServiceTypes">Услуги</option>
+            <option value="DeliveryMethods">Доставка</option>
+
+        </select>
+
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="empty-block">
+            Загрузка...
+        </div>
+    }
+    else if (FilteredLogs.Count == 0)
+    {
+        <div class="empty-block">
+            Записи не найдены
+        </div>
+    }
+    else
+    {
+        <div class="cards-container">
+
+            @foreach (var item in FilteredLogs)
+            {
+                <div class="service-card audit-card">
+
+                    <div class="service-header">
+
+                        <div class="service-name">
+                            @(item.UserLogin ?? "Система")
+                        </div>
+
+                        <div class="audit-badge @GetActionClass(item.ActionType)">
+                            @GetActionName(item.ActionType)
+                        </div>
+
+                    </div>
+
+                    <div class="service-description">
+
+                        <div>
+                            <b>Таблица:</b>
+                            @item.TableName
+                        </div>
+
+                        <div>
+                            <b>ID:</b>
+                            @(item.RecordId ?? "-")
+                        </div>
+
+                        <div>
+                            <b>IP:</b>
+                            @(item.IpAddress ?? "-")
+                        </div>
+
+                        <div>
+                            <b>Дата:</b>
+                            @item.CreatedAt.ToLocalTime()
+                            .ToString("dd.MM.yyyy HH:mm")
+                        </div>
+
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(item.OldValues)
+                                || !string.IsNullOrWhiteSpace(item.NewValues))
+                    {
+                        <details class="audit-details">
+
+                            <summary>
+                                Подробнее
+                            </summary>
+
+                            @if (!string.IsNullOrWhiteSpace(item.OldValues))
+                            {
+                                <div class="json-block">
+
+                                    <div class="json-title">
+                                        Было
+                                    </div>
+
+                                    <pre>
+                @FormatJson(item.OldValues)
+                                                    </pre>
+
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(item.NewValues))
+                            {
+                                <div class="json-block">
+
+                                    <div class="json-title">
+                                        Стало
+                                    </div>
+
+                                    <pre>
+                @FormatJson(item.NewValues)
+                                                    </pre>
+
+                                </div>
+                            }
+
+                        </details>
+                    }
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+
+
+
+@code {
+
+    private List<AuditLogDto> allLogs = new();
+
+    private string searchText = "";
+
+    private string selectedAction = "all";
+
+    private string selectedTable = "all";
+
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLogs();
+    }
+
+    private async Task LoadLogs()
+    {
+        isLoading = true;
+
+        try
+        {
+            var response = await Http
+                .GetFromJsonAsync<AuditLogResponseDto>(
+                    "api/Audit?page=1&pageSize=10000");
+
+            allLogs = response?.Items ?? new();
+        }
+        catch
+        {
+            allLogs = new();
+        }
+
+        isLoading = false;
+    }
+
+    private List<AuditLogDto> FilteredLogs =>
+
+        allLogs
+
+        .Where(x =>
+
+            (
+                string.IsNullOrWhiteSpace(searchText)
+
+                ||
+
+                (x.UserLogin?.Contains(
+                    searchText,
+                    StringComparison.OrdinalIgnoreCase) == true)
+
+                ||
+
+                x.ActionType.Contains(
+                    searchText,
+                    StringComparison.OrdinalIgnoreCase)
+
+                ||
+
+                x.TableName.Contains(
+                    searchText,
+                    StringComparison.OrdinalIgnoreCase)
+            )
+
+            &&
+
+            (
+                selectedAction == "all"
+                || x.ActionType == selectedAction
+            )
+
+            &&
+
+            (
+                selectedTable == "all"
+                || x.TableName == selectedTable
+            )
+
+        )
+
+        .OrderByDescending(x => x.CreatedAt)
+
+        .ToList();
+
+    private string GetActionClass(string actionType) => actionType switch
+    {
+        "Create" => "action-create",
+        "Update" => "action-update",
+        "Delete" => "action-delete",
+        "Login" => "action-login",
+        "LoginFailed" => "action-failed",
+        "UpdateStatus" => "action-status",
+        _ => "action-default"
+    };
+
+    private string GetActionName(string actionType) => actionType switch
+    {
+        "Create" => "Создание",
+        "Update" => "Изменение",
+        "Delete" => "Удаление",
+        "Login" => "Вход",
+        "LoginFailed" => "Ошибка входа",
+        "UpdateStatus" => "Статус",
+        _ => actionType
+    };
+
+    private string FormatJson(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return "";
+
+        try
+        {
+            var obj = System.Text.Json.JsonSerializer
+                .Deserialize<object>(json);
+
+            return System.Text.Json.JsonSerializer
+                .Serialize(
+                    obj,
+                    new System.Text.Json.JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    });
+        }
+        catch
+        {
+            return json;
+        }
+    }
+
+}
