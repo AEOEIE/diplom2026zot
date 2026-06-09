@@ -167,25 +167,6 @@
                 </div>
 
             </div>
-
-        @* @if (isEdit)
-            {
-                <div class="switch-row">
-
-                    <span>
-                        Активен
-                    </span>
-
-                    <div class="switch"
-                         @onclick="ToggleActive">
-
-                        <div class="switch-circle @(isActive ? "right" : "")">
-                        </div>
-
-                    </div>
-
-                </div>
-            } *@
         @if (isEdit)
             {
                 <div class="checkbox-group">
@@ -317,11 +298,6 @@
     {
         showModal = false;
     }
-
-    // private void ToggleActive()
-    // {
-    //     isActive = !isActive;
-    // }
 
     private async Task Save()
     {

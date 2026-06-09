@@ -76,7 +76,7 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Неверный логин или пароль" });
         }
 
-        // ========== ПРОВЕРКА АКТИВНОЙ БЛОКИРОВКИ ==========
+        // ПРОВЕРКА АКТИВНОЙ БЛОКИРОВКИ 
         if (user.LockoutEnabled && user.LockoutEnd.HasValue && user.LockoutEnd > DateTime.Now)
         {
             var remainingMinutes = (int)Math.Ceiling((user.LockoutEnd.Value - DateTime.Now).TotalMinutes);
@@ -88,7 +88,7 @@ public class AuthController : ControllerBase
             });
         }
 
-        // ========== ПРОВЕРКА ПАРОЛЯ ==========
+        // ПРОВЕРКА ПАРОЛЯ 
         var validPassword = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
 
         if (!validPassword || user.LockoutEnd > DateTime.Now)
@@ -107,7 +107,6 @@ public class AuthController : ControllerBase
 
             if (user.AccessFailedCount >= MAX_FAILED_ATTEMPTS)
             {
-                // Сохраняем ЛОКАЛЬНОЕ время
                 user.LockoutEnd = DateTime.Now.AddMinutes(LOCKOUT_MINUTES);
                 await _context.SaveChangesAsync();
 
@@ -129,9 +128,8 @@ public class AuthController : ControllerBase
             });
         }
 
-        // ========== УСПЕШНЫЙ ВХОД ==========
+        // УСПЕШНЫЙ ВХОД
         user.AccessFailedCount = 0;
-        // LockoutEnd НЕ трогаем, оставляем старую дату блокировки
         await _context.SaveChangesAsync();
 
         var token = _jwtService.GenerateToken(user, user.Role!.Name);

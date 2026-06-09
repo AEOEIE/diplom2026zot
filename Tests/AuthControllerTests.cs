@@ -28,8 +28,6 @@ public class AuthControllerTests
     private AuthController CreateController(AppDbContext context, int userId = 1, string role = "Admin")
     {
         var jwtService = new Mock<JwtService>(null);
-
-        // ТОЛЬКО 2 ПАРАМЕТРА: context и jwtService
         var controller = new AuthController(context, jwtService.Object);
 
         var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
@@ -48,7 +46,6 @@ public class AuthControllerTests
     [Test]
     public async Task Register_ShouldCreateUser_WhenValidRequest()
     {
-        // Arrange
         var context = GetDbContext();
         var controller = CreateController(context);
 
@@ -61,11 +58,8 @@ public class AuthControllerTests
             Email = "test@test.com",
             Password = "Password123!"
         };
-
-        // Act
         var result = await controller.Register(request);
 
-        // Assert
         var users = await context.Users.ToListAsync();
         users.Should().HaveCount(1);
         users[0].Login.Should().Be("testuser");
@@ -75,7 +69,6 @@ public class AuthControllerTests
     [Test]
     public async Task Register_ShouldReturnError_WhenLoginExists()
     {
-        // Arrange
         var context = GetDbContext();
         var controller = CreateController(context);
 
@@ -99,10 +92,8 @@ public class AuthControllerTests
             Password = "Password123!"
         };
 
-        // Act
         var result = await controller.Register(request);
 
-        // Assert
         var users = await context.Users.CountAsync();
         users.Should().Be(1); // Пользователь не добавился
     }
@@ -111,7 +102,6 @@ public class AuthControllerTests
     [Test]
     public async Task Login_ShouldReturnUnauthorized_WhenInvalidPassword()
     {
-        // Arrange
         var context = GetDbContext();
         var controller = CreateController(context);
 
@@ -135,18 +125,13 @@ public class AuthControllerTests
             Login = "testuser",
             Password = "WrongPassword!"
         };
-
-        // Act
         var result = await controller.Login(request);
-
-        // Assert
         result.Result.Should().BeOfType<UnauthorizedObjectResult>();
     }
 
     [Test]
     public async Task Login_ShouldBlockUser_After10FailedAttempts()
     {
-        // Arrange
         var context = GetDbContext();
         var controller = CreateController(context);
 
@@ -171,11 +156,7 @@ public class AuthControllerTests
             Login = "testuser",
             Password = "WrongPassword!"
         };
-
-        // Act
         var result = await controller.Login(request);
-
-        // Assert
         result.Result.Should().BeOfType<UnauthorizedObjectResult>();
 
         var updatedUser = await context.Users.FirstAsync();
@@ -186,7 +167,6 @@ public class AuthControllerTests
     [Test]
     public async Task Login_ShouldNotIncreaseCounter_WhenUserIsLocked()
     {
-        // Arrange
         var context = GetDbContext();
         var controller = CreateController(context);
 
@@ -212,11 +192,8 @@ public class AuthControllerTests
             Login = "testuser",
             Password = "WrongPassword!"
         };
-
-        // Act
         var result = await controller.Login(request);
 
-        // Assert
         var updatedUser = await context.Users.FirstAsync();
         updatedUser.AccessFailedCount.Should().Be(10); // Не увеличился
     }

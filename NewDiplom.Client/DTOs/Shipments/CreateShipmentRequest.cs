@@ -2,9 +2,9 @@
 
 public class CreateShipmentRequest
 {
-    public int CurrentOfficeId { get; set; }  // Добавьте - откуда отправляем
+    public int CurrentOfficeId { get; set; }  //откуда отправляем
     public int DestinationOfficeId { get; set; }  // Куда отправляем
-    public int? ClientId { get; set; }  // Добавьте для случаев, когда сотрудник создает от имени клиента
+    public int? ClientId { get; set; }  
     public string RecipientName { get; set; } = string.Empty;
     public string DestinationAddress { get; set; } = string.Empty;
     public string RecipientPhone { get; set; } = string.Empty;

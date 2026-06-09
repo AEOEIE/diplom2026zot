@@ -4,33 +4,6 @@ namespace NewDiplom.DTOs.Users;
 
 public class CreateEmployeeRequest
 {
-    //public string FirstName { get; set; } = string.Empty;
-
-    //public string LastName { get; set; } = string.Empty;
-
-    //public string? MiddleName { get; set; }
-
-    //public string Phone { get; set; } = string.Empty;
-
-    //public string Email { get; set; } = string.Empty;
-
-    //public string Login { get; set; } = string.Empty;
-
-    //public string Password { get; set; } = string.Empty;
-
-    //public int RoleId { get; set; }
-
-    //public int? PostOfficeId { get; set; }
-
-    //public string PassportSeries { get; set; } = string.Empty;
-
-    //public string PassportNumber { get; set; } = string.Empty;
-
-    //public string PassportIssuedBy { get; set; } = string.Empty;
-
-    //public DateTime? PassportIssueDate { get; set; }
-
-    //public string RegistrationAddress { get; set; } = string.Empty;
     [Required(ErrorMessage = "Введите имя")]
     public string FirstName { get; set; } = string.Empty;
 

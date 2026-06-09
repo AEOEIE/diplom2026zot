@@ -90,8 +90,6 @@ public class ServiceTypesController : ControllerBase
         service.IsActive = dto.IsActive;
 
         await _context.SaveChangesAsync();
-
-        // Логируем изменение
         await _auditService.LogAsync(
             actionType: "Update",
             tableName: "ServiceTypes",
@@ -117,8 +115,6 @@ public class ServiceTypesController : ControllerBase
 
         if (service == null)
             return NotFound();
-
-        // Сохраняем данные перед удалением
         var oldValues = AuditService.SerializeObject(new
         {
             service.Name,
@@ -128,8 +124,6 @@ public class ServiceTypesController : ControllerBase
 
         _context.ServiceTypes.Remove(service);
         await _context.SaveChangesAsync();
-
-        // Логируем удаление
         await _auditService.LogAsync(
             actionType: "Delete",
             tableName: "ServiceTypes",

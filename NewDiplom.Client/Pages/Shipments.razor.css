@@ -1,4 +1,4 @@
-﻿/* ============ СТРАНИЦА ОТПРАВЛЕНИЙ ============ */
+﻿
 
 .page {
     padding: 30px;
@@ -65,7 +65,6 @@
         transform: translateY(0);
     }
 
-/* ============ КАРТОЧКИ ОТПРАВЛЕНИЙ ============ */
 
 .cards-container {
     display: grid;
@@ -140,7 +139,6 @@
     color: #333;
 }
 
-/* ============ СТАТУСЫ ОТПРАВЛЕНИЙ ============ */
 
 .status-badge {
     width: fit-content;
@@ -182,7 +180,6 @@
     border: 1px solid #ce93d8;
 }
 
-/* ============ КНОПКИ В КАРТОЧКАХ ============ */
 
 .edit-button {
     width: 100%;
@@ -205,7 +202,6 @@
         transform: translateY(0);
     }
 
-/* ============ МОДАЛЬНЫЕ ОКНА ============ */
 
 .modal-background {
     position: fixed;
@@ -264,8 +260,6 @@
     font-weight: 700;
 }
 
-/* ============ ФОРМЫ ============ */
-
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -313,7 +307,6 @@ textarea.form-input {
     font-family: inherit;
 }
 
-/* ============ КНОПКИ ФОРМ ============ */
 
 .buttons-row {
     display: flex;
@@ -361,7 +354,6 @@ textarea.form-input {
         transform: translateY(0);
     }
 
-/* ============ ПУСТОЙ БЛОК ============ */
 
 .empty-block {
     text-align: center;
@@ -373,7 +365,6 @@ textarea.form-input {
     backdrop-filter: blur(10px);
 }
 
-/* ============ АДАПТИВНОСТЬ ============ */
 
 @media (max-width: 768px) {
     .page {

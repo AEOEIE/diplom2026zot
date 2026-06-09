@@ -1,5 +1,4 @@
-﻿// Tests/Controllers/ShipmentsControllerTests.cs
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Microsoft.EntityFrameworkCore;
 using NewDiplom.Controllers;
 using NewDiplom.Data;

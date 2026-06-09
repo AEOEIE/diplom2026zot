@@ -61,7 +61,4 @@ public class Shipment
     public bool IsConfirmed { get; set; }
 
     public ICollection<ShipmentTracking> TrackingRecords { get; set; } = new List<ShipmentTracking>();
-    //public int RecipientClientId { get; set; }
-
-    //public User? RecipientClient { get; set; }
 }

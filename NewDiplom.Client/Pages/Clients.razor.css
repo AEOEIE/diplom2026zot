@@ -1,5 +1,4 @@
-﻿/* ============ СТРАНИЦА КЛИЕНТОВ ============ */
-
+﻿
 .page {
     padding: 30px;
 }
@@ -74,8 +73,6 @@
     .add-button:active {
         transform: translateY(0);
     }
-
-/* ============ КАРТОЧКИ КЛИЕНТОВ ============ */
 
 .cards-container {
     display: grid;
@@ -182,8 +179,6 @@
         transform: translateY(0);
     }
 
-/* ============ МОДАЛЬНЫЕ ОКНА ============ */
-
 .modal-background {
     position: fixed;
     inset: 0;
@@ -241,7 +236,6 @@
     font-weight: 700;
 }
 
-/* ============ ФОРМЫ ============ */
 
 .form-grid {
     display: grid;
@@ -308,7 +302,6 @@ input[type="date"].form-input {
         font-weight: 500;
     }
 
-/* ============ КНОПКИ ФОРМ ============ */
 
 .buttons-row {
     display: flex;
@@ -357,7 +350,6 @@ input[type="date"].form-input {
         transform: translateY(0);
     }
 
-/* ============ ПУСТОЙ БЛОК ============ */
 
 .empty-block {
     text-align: center;
@@ -369,7 +361,6 @@ input[type="date"].form-input {
     backdrop-filter: blur(10px);
 }
 
-/* ============ АДАПТИВНОСТЬ ============ */
 
 @media (max-width: 768px) {
     .page {

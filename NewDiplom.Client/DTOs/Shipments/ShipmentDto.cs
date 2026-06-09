@@ -13,6 +13,6 @@ public class ShipmentDto
     public decimal WeightKg { get; set; }
     public decimal TotalPrice { get; set; }
     public DateTime AcceptedAt { get; set; }
-    public string? CurrentOfficeName { get; set; }  // Добавьте
-    public string? DestinationOfficeName { get; set; }  // Добавьте
+    public string? CurrentOfficeName { get; set; }  
+    public string? DestinationOfficeName { get; set; }  
 }
