@@ -69,7 +69,7 @@ public class AuthController : ControllerBase
     {
         var user = await _context.Users
             .Include(x => x.Role)
-            .FirstOrDefaultAsync(x => x.Login == request.Login);
+            .FirstOrDefaultAsync(x => x.Login == request.Login && x.IsActive==true);
 
         if (user == null)
         {
