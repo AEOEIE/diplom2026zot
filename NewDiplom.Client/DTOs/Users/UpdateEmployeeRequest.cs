@@ -34,9 +34,13 @@ public class UpdateEmployeeRequest
     public bool IsActive { get; set; }
 
     [Required(ErrorMessage = "Введите серию паспорта")]
+    [RegularExpression(@"^\d{4}$",
+    ErrorMessage = "Серия паспорта должна содержать 4 цифры")]
     public string PassportSeries { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Введите номер паспорта")]
+    [RegularExpression(@"^\d{6}$",
+    ErrorMessage = "Номер паспорта должен содержать 6 цифр")]
     public string PassportNumber { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Введите кем выдан паспорт")]

@@ -289,6 +289,8 @@ public class UsersController : ControllerBase
     {
         var user = await _context.Users
             .FirstOrDefaultAsync(x => x.Id == id);
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        var userId = int.Parse(userIdClaim.Value);
 
         if (user == null)
             return NotFound();
@@ -309,7 +311,20 @@ public class UsersController : ControllerBase
             user.PassportIssueDate,
             user.RegistrationAddress
         });
-
+        if (user.Id == userId && user.RoleId != request.RoleId)
+        {
+            return BadRequest(new
+            {
+                message = "Вы не можете изменить собственную роль."
+            });
+        }
+        if (user.Id == userId && !request.IsActive)
+        {
+            return BadRequest(new
+            {
+                message = "Вы не можете деактивировать собственный аккаунт."
+            });
+        }
         var exists = await _context.Users.AnyAsync(x =>
             x.Id != id &&
             (x.Login.ToLower() == request.Login.ToLower() ||
